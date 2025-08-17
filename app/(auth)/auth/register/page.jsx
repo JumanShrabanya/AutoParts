@@ -1,20 +1,56 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 
 export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    firstName: "",
-    lastName: "",
-    phone: "",
   });
+
+  // Validation states
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+
+  // Validation functions
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) return "Email is required";
+    if (!emailRegex.test(email)) return "Please enter a valid email address";
+    if (email.length > 100) return "Email is too long";
+    return "";
+  };
+
+  const validatePassword = (password) => {
+    if (!password) return "Password is required";
+    if (password.length < 8)
+      return "Password must be at least 8 characters long";
+    if (password.length > 128) return "Password is too long";
+    if (!/(?=.*[a-z])/.test(password))
+      return "Password must contain at least one lowercase letter";
+    if (!/(?=.*[A-Z])/.test(password))
+      return "Password must contain at least one uppercase letter";
+    if (!/(?=.*\d)/.test(password))
+      return "Password must contain at least one number";
+    if (!/(?=.*[@$!%*?&])/.test(password))
+      return "Password must contain at least one special character (@$!%*?&)";
+    return "";
+  };
+
+  const validateName = (name) => {
+    if (!name) return "Name is required";
+    if (name.length < 2) return "Name must be at least 2 characters long";
+    if (name.length > 50) return "Name is too long";
+    if (!/^[a-zA-Z\s]+$/.test(name))
+      return "Name can only contain letters and spaces";
+    return "";
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -22,16 +58,87 @@ export default function AuthPage() {
       ...prev,
       [name]: value,
     }));
+
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched((prev) => ({
+      ...prev,
+      [name]: true,
+    }));
+
+    // Validate on blur
+    let error = "";
+    switch (name) {
+      case "name":
+        error = validateName(value);
+        break;
+      case "email":
+        error = validateEmail(value);
+        break;
+      case "password":
+        error = validatePassword(value);
+        break;
+      case "confirmPassword":
+        if (isSignUp && value !== formData.password) {
+          error = "Passwords do not match";
+        }
+        break;
+      default:
+        break;
+    }
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: error,
+    }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    newErrors.name = validateName(formData.name);
+    newErrors.email = validateEmail(formData.email);
+    newErrors.password = validatePassword(formData.password);
+
+    if (isSignUp) {
+      if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = "Passwords do not match";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.values(newErrors).every((error) => error === "");
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (isSignUp && formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+
+    if (!validateForm()) {
       return;
     }
+
     // Handle authentication logic here
     console.log("Form submitted:", formData);
+  };
+
+  const getInputClassName = (fieldName) => {
+    const baseClasses =
+      "w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors";
+    const hasError = errors[fieldName] && touched[fieldName];
+
+    if (hasError) {
+      return `${baseClasses} border-red-500 focus:border-red-500`;
+    }
+    return `${baseClasses} border-gray-300 focus:border-blue-500`;
   };
 
   return (
@@ -74,73 +181,31 @@ export default function AuthPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {isSignUp && (
-              <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      htmlFor="firstName"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      First Name
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                      <input
-                        type="text"
-                        id="firstName"
-                        name="firstName"
-                        value={formData.firstName}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        placeholder="John"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="lastName"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Last Name
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                      <input
-                        type="text"
-                        id="lastName"
-                        name="lastName"
-                        value={formData.lastName}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        placeholder="Doe"
-                      />
-                    </div>
-                  </div>
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Full Name
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    required
+                    className={getInputClassName("name")}
+                    placeholder="John Doe"
+                  />
                 </div>
-                <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Phone Number
-                  </label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                    <input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      placeholder="+1 (555) 123-4567"
-                    />
-                  </div>
-                </div>
-              </>
+                {errors.name && touched.name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                )}
+              </div>
             )}
 
             <div>
@@ -158,11 +223,15 @@ export default function AuthPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
                   required
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className={getInputClassName("email")}
                   placeholder="john@example.com"
                 />
               </div>
+              {errors.email && touched.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
             </div>
 
             <div>
@@ -180,8 +249,9 @@ export default function AuthPage() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
                   required
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className={getInputClassName("password")}
                   placeholder="••••••••"
                 />
                 <button
@@ -196,6 +266,15 @@ export default function AuthPage() {
                   )}
                 </button>
               </div>
+              {errors.password && touched.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+              )}
+              {isSignUp && (
+                <div className="mt-2 text-xs text-gray-500">
+                  Password must contain at least 8 characters, including
+                  uppercase, lowercase, number, and special character.
+                </div>
+              )}
             </div>
 
             {isSignUp && (
@@ -214,8 +293,9 @@ export default function AuthPage() {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
+                    onBlur={handleBlur}
                     required
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className={getInputClassName("confirmPassword")}
                     placeholder="••••••••"
                   />
                   <button
@@ -230,6 +310,11 @@ export default function AuthPage() {
                     )}
                   </button>
                 </div>
+                {errors.confirmPassword && touched.confirmPassword && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.confirmPassword}
+                  </p>
+                )}
               </div>
             )}
 
