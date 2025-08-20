@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
 import PendingUser from "@/models/pendingUser.model";
 import User from "@/models/user.model";
+import { cookies } from "next/headers";
+import { getSessionCookieOptions, signSessionToken } from "@/lib/auth";
 
 export async function POST(request) {
   try {
@@ -52,7 +54,7 @@ export async function POST(request) {
     }
 
     // Create real user with hashed password from pending
-    await User.create({
+    const user = await User.create({
       name: pending.name,
       email: pending.email,
       password: pending.passwordHash,
@@ -62,7 +64,29 @@ export async function POST(request) {
     // Delete pending entry
     await PendingUser.deleteOne({ _id: pending._id });
 
-    return NextResponse.json({ success: true, message: "Email verified" });
+    // Create session
+    const token = signSessionToken({
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+    const cookieStore = cookies();
+    const opts = getSessionCookieOptions();
+    cookieStore.set(opts.name, token, opts);
+
+    return NextResponse.json({
+      success: true,
+      message: "Email verified",
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("Verify error:", error);
