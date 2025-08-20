@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -17,6 +19,9 @@ export default function AuthPage() {
   // Validation states
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState("");
+  const router = useRouter();
 
   // Validation functions
   const validateEmail = (email) => {
@@ -119,15 +124,52 @@ export default function AuthPage() {
     return Object.values(newErrors).every((error) => error === "");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!isSignUp) {
+      // TODO: Implement sign in flow (axios)
+      return;
+    }
 
     if (!validateForm()) {
       return;
     }
 
-    // Handle authentication logic here
-    console.log("Form submitted:", formData);
+    setApiError("");
+    setIsSubmitting(true);
+    try {
+      const { data } = await axios.post("/api/auth/register", {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (!data?.success) {
+        setApiError(data?.message || "Registration failed. Please try again.");
+        return;
+      }
+
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("pending_email", formData.email);
+      }
+      router.push(`/auth/verify?email=${encodeURIComponent(formData.email)}`);
+    } catch (err) {
+      const resp = err?.response?.data;
+      if (resp?.errors) {
+        setErrors((prev) => ({ ...prev, ...resp.errors }));
+        setTouched((prev) => ({
+          ...prev,
+          name: true,
+          email: true,
+          password: true,
+          confirmPassword: true,
+        }));
+      }
+      setApiError(resp?.error || "Network error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getInputClassName = (fieldName) => {
@@ -237,7 +279,7 @@ export default function AuthPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text.sm font-medium text-gray-700 mb-2"
               >
                 Password
               </label>
@@ -343,11 +385,20 @@ export default function AuthPage() {
               </div>
             )}
 
+            {apiError && <p className="text-sm text-red-600">{apiError}</p>}
+
             <button
               type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              disabled={isSubmitting}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
             >
-              {isSignUp ? "Create Account" : "Sign In"}
+              {isSubmitting
+                ? isSignUp
+                  ? "Creating..."
+                  : "Signing in..."
+                : isSignUp
+                ? "Create Account"
+                : "Sign In"}
             </button>
           </form>
 
