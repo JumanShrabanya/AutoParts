@@ -8,6 +8,7 @@ const addressSchema = new mongoose.Schema({
   state: { type: String, required: true },
   zip: { type: String, required: true },
   country: { type: String, required: true },
+  type: { type: String, enum: ["home", "work", "other"], default: "home" },
   isDefault: { type: Boolean, default: false },
 });
 

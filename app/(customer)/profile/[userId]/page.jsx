@@ -101,15 +101,8 @@ export default function ProfilePage() {
               {/* Action Buttons */}
               <div className="flex gap-3">
                 <button
-                  onClick={refresh}
-                  className="px-6 py-3 text-sm font-medium rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 flex items-center gap-2"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Refresh
-                </button>
-                <button
                   onClick={logout}
-                  className="px-6 py-3 text-sm font-medium rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
+                  className="cursor-pointer px-6 py-3 text-sm font-medium rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
                 >
                   <LogOut className="w-4 h-4" />
                   Log out
@@ -162,7 +155,7 @@ export default function ProfilePage() {
                 Quick Actions
               </h2>
               <div className="grid sm:grid-cols-2 gap-4">
-                <button className="p-4 rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group">
+                <button className="cursor-pointer p-4 rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
                       <Edit3 className="w-5 h-5 text-green-600" />
@@ -176,7 +169,10 @@ export default function ProfilePage() {
                   </div>
                 </button>
 
-                <button className="p-4 rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group">
+                <button
+                  onClick={() => router.push(`/profile/${user.id}/addresses`)}
+                  className="cursor-pointer p-4 rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group"
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
                       <MapPin className="w-5 h-5 text-purple-600" />
@@ -192,7 +188,7 @@ export default function ProfilePage() {
                   </div>
                 </button>
 
-                <button className="p-4 rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group">
+                <button className="cursor-pointer p-4 rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center group-hover:bg-orange-200 transition-colors">
                       <Package className="w-5 h-5 text-orange-600" />
@@ -206,7 +202,7 @@ export default function ProfilePage() {
                   </div>
                 </button>
 
-                <button className="p-4 rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group">
+                <button className="cursor-pointer p-4 rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
                       <Settings className="w-5 h-5 text-indigo-600" />
@@ -249,39 +245,35 @@ export default function ProfilePage() {
                   </p>
                 </div>
 
-                <button className="w-full p-3 text-sm font-medium rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
+                <button className="cursor-pointer w-full p-3 text-sm font-medium rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
                   Change Password
-                </button>
-
-                <button className="w-full p-3 text-sm font-medium rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
-                  Enable 2FA
                 </button>
               </div>
             </div>
 
             {/* Account Stats Card */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            {/* <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">
                 Account Stats
               </h2>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
+                <div className="cursor-pointer flex items-center justify-between p-3 bg-blue-50 rounded-xl">
                   <span className="text-gray-700">Orders</span>
                   <span className="text-2xl font-bold text-blue-600">0</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
+                <div className="cursor-pointer flex items-center justify-between p-3 bg-green-50 rounded-xl">
                   <span className="text-gray-700">Addresses</span>
                   <span className="text-2xl font-bold text-green-600">0</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-xl">
+                <div className="cursor-pointer flex items-center justify-between p-3 bg-purple-50 rounded-xl">
                   <span className="text-gray-700">Wishlist</span>
                   <span className="text-2xl font-bold text-purple-600">0</span>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
