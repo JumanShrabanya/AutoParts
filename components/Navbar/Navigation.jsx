@@ -3,9 +3,21 @@
 import Link from "next/link";
 import { ShoppingCart, User, Search, Menu } from "lucide-react";
 import { useState } from "react";
+import { useUserSession } from "@/context/userSession";
+import { useRouter } from "next/navigation";
 
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { authenticated, user } = useUserSession();
+  const router = useRouter();
+
+  const handleProfileClick = () => {
+    if (authenticated && user?.id) {
+      router.push(`/profile/${user.id}`);
+    } else {
+      router.push("/auth/register");
+    }
+  };
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -80,12 +92,12 @@ export default function Navigation() {
             >
               <ShoppingCart className="h-6 w-6" />
             </Link>
-            <Link
-              href="/auth/register"
+            <button
+              onClick={handleProfileClick}
               className="text-gray-700 hover:text-blue-600 p-2 transition-colors"
             >
               <User className="h-6 w-6" />
-            </Link>
+            </button>
 
             {/* Mobile menu button */}
             <button
