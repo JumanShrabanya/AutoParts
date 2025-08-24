@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   HeroSection,
   SearchSection,
@@ -8,9 +8,8 @@ import {
   SearchResults,
   NoResults,
   StartSearch,
-  categories,
-  brands,
-  dummyParts,
+  defaultCategoryIcons,
+  defaultCategoryColors,
 } from "@/components/Partspage";
 
 export default function PartsPage() {
@@ -22,81 +21,70 @@ export default function PartsPage() {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  const handleSearch = (e) => {
+  // API data states
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isLoadingBrands, setIsLoadingBrands] = useState(true);
+
+  // Fetch categories and brands on component mount
+  useEffect(() => {
+    fetchCategories();
+    fetchBrands();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      setIsLoadingCategories(true);
+      const response = await fetch("/api/categories");
+      const data = await response.json();
+      if (data.success) {
+        setCategories(data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
+
+  const fetchBrands = async () => {
+    try {
+      setIsLoadingBrands(true);
+      const response = await fetch("/api/brands");
+      const data = await response.json();
+      if (data.success) {
+        setBrands(data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch brands:", error);
+    } finally {
+      setIsLoadingBrands(false);
+    }
+  };
+
+  const handleSearch = async (e) => {
     e.preventDefault();
     setIsSearching(true);
 
-    // Simulate API delay
-    setTimeout(() => {
-      let filteredResults = [...dummyParts];
+    try {
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (searchQuery.trim()) params.append("q", searchQuery.trim());
+      if (selectedCategory) params.append("category", selectedCategory);
+      if (brand) params.append("brand", brand);
+      if (priceRange[0] > 0) params.append("minPrice", priceRange[0]);
+      if (priceRange[1] < 10000) params.append("maxPrice", priceRange[1]);
+      params.append("limit", "50"); // Show more results
 
-      // Filter by search query
-      if (searchQuery.trim()) {
-        filteredResults = filteredResults.filter(
-          (part) =>
-            part.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            part.description
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase()) ||
-            part.brand.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      }
+      const response = await fetch(`/api/parts/search?${params.toString()}`);
+      const data = await response.json();
 
-      // Filter by category
-      if (selectedCategory) {
-        filteredResults = filteredResults.filter(
-          (part) => part.category === selectedCategory
-        );
-      }
+      if (data.success) {
+        setSearchResults(data.data.parts);
 
-      // Filter by brand
-      if (brand) {
-        filteredResults = filteredResults.filter(
-          (part) => part.brand === brand
-        );
-      }
-
-      // Filter by price range
-      filteredResults = filteredResults.filter(
-        (part) => part.price >= priceRange[0] && part.price <= priceRange[1]
-      );
-
-      setSearchResults(filteredResults);
-      setIsSearching(false);
-
-      // Scroll to results section after search
-      if (filteredResults.length > 0) {
-        setTimeout(() => {
-          const resultsSection = document.getElementById("search-results");
-          if (resultsSection) {
-            resultsSection.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
-          }
-        }, 100);
-      }
-    }, 500);
-  };
-
-  const handleCategorySelect = (categoryId) => {
-    const newCategory = categoryId === selectedCategory ? "" : categoryId;
-    setSelectedCategory(newCategory);
-
-    // Auto-search when category is selected
-    if (newCategory) {
-      setSearchQuery("");
-      setBrand("");
-      setPriceRange([0, 10000]);
-
-      setTimeout(() => {
-        const filteredResults = dummyParts.filter(
-          (part) => part.category === newCategory
-        );
-        setSearchResults(filteredResults);
-
-        // Scroll to results section after category selection
-        if (filteredResults.length > 0) {
+        // Scroll to results section after search
+        if (data.data.parts.length > 0) {
           setTimeout(() => {
             const resultsSection = document.getElementById("search-results");
             if (resultsSection) {
@@ -107,9 +95,80 @@ export default function PartsPage() {
             }
           }, 100);
         }
-      }, 300);
+      } else {
+        console.error("Search failed:", data.error);
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleCategorySelect = async (categoryId) => {
+    const newCategory = categoryId === selectedCategory ? "" : categoryId;
+    setSelectedCategory(newCategory);
+
+    // Auto-search when category is selected
+    if (newCategory) {
+      setSearchQuery("");
+      setBrand("");
+      setPriceRange([0, 10000]);
+
+      try {
+        setIsSearching(true);
+        const params = new URLSearchParams();
+        params.append("category", newCategory);
+        params.append("limit", "50");
+
+        const response = await fetch(`/api/parts/search?${params.toString()}`);
+        const data = await response.json();
+
+        if (data.success) {
+          setSearchResults(data.data.parts);
+
+          // Scroll to results section after category selection
+          if (data.data.parts.length > 0) {
+            setTimeout(() => {
+              const resultsSection = document.getElementById("search-results");
+              if (resultsSection) {
+                resultsSection.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+              }
+            }, 100);
+          }
+        }
+      } catch (error) {
+        console.error("Category search error:", error);
+      } finally {
+        setIsSearching(false);
+      }
     } else {
       setSearchResults([]);
+    }
+  };
+
+  const handleBrowseAll = async () => {
+    try {
+      setIsSearching(true);
+      const response = await fetch("/api/parts/search?limit=50");
+      const data = await response.json();
+
+      if (data.success) {
+        setSearchResults(data.data.parts);
+        setSearchQuery("");
+        setSelectedCategory("");
+        setBrand("");
+        setPriceRange([0, 10000]);
+      }
+    } catch (error) {
+      console.error("Browse all error:", error);
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -141,6 +200,8 @@ export default function PartsPage() {
           brands={brands}
           handleSearch={handleSearch}
           isSearching={isSearching}
+          isLoadingCategories={isLoadingCategories}
+          isLoadingBrands={isLoadingBrands}
         />
 
         <CategoryCards
@@ -155,6 +216,7 @@ export default function PartsPage() {
             searchResults={searchResults}
             categories={categories}
             clearSearch={clearSearch}
+            isLoading={isSearching}
           />
         )}
 
@@ -175,12 +237,7 @@ export default function PartsPage() {
           priceRange[1] === 10000 && (
             <StartSearch
               setShowAdvancedSearch={setShowAdvancedSearch}
-              setSearchResults={setSearchResults}
-              dummyParts={dummyParts}
-              setSearchQuery={setSearchQuery}
-              setSelectedCategory={setSelectedCategory}
-              setBrand={setBrand}
-              setPriceRange={setPriceRange}
+              handleBrowseAll={handleBrowseAll}
             />
           )}
       </div>

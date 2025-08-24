@@ -2,21 +2,8 @@ import { Search } from "lucide-react";
 
 export default function StartSearch({
   setShowAdvancedSearch,
-  setSearchResults,
-  dummyParts,
-  setSearchQuery,
-  setSelectedCategory,
-  setBrand,
-  setPriceRange,
+  handleBrowseAll,
 }) {
-  const handleBrowseAll = () => {
-    setSearchResults(dummyParts);
-    setSearchQuery("");
-    setSelectedCategory("");
-    setBrand("");
-    setPriceRange([0, 10000]);
-  };
-
   return (
     <div className="text-center py-16">
       <div className="bg-white rounded-2xl shadow-lg p-12 border border-gray-100">

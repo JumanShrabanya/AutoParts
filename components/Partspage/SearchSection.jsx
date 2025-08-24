@@ -17,6 +17,8 @@ export default function SearchSection({
   brands,
   handleSearch,
   isSearching,
+  isLoadingCategories,
+  isLoadingBrands,
 }) {
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
@@ -57,13 +59,18 @@ export default function SearchSection({
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                disabled={isLoadingCategories}
               >
                 <option value="">All Categories</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
+                {isLoadingCategories ? (
+                  <option disabled>Loading categories...</option>
+                ) : (
+                  categories.map((category) => (
+                    <option key={category._id} value={category._id}>
+                      {category.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -76,13 +83,18 @@ export default function SearchSection({
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                disabled={isLoadingBrands}
               >
                 <option value="">All Brands</option>
-                {brands.map((brandName) => (
-                  <option key={brandName} value={brandName}>
-                    {brandName}
-                  </option>
-                ))}
+                {isLoadingBrands ? (
+                  <option disabled>Loading brands...</option>
+                ) : (
+                  brands.map((brandItem) => (
+                    <option key={brandItem._id} value={brandItem._id}>
+                      {brandItem.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
