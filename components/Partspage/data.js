@@ -7,6 +7,13 @@ import {
   Circle,
   Lightbulb,
   Droplets,
+  Cog,
+  Thermometer,
+  Fuel,
+  Palette,
+  ToolCase,
+  Rocket,
+  Shield,
 } from "lucide-react";
 
 // Default category icons mapping for fallback
@@ -19,6 +26,13 @@ export const defaultCategoryIcons = {
   tires: Circle,
   lighting: Lightbulb,
   fluids: Droplets,
+  transmission: Cog,
+  cooling: Thermometer,
+  fuel: Fuel,
+  interior: Palette,
+  tools: ToolCase,
+  performance: Rocket,
+  maintenance: Shield,
 };
 
 // Default category colors for fallback
@@ -31,4 +45,11 @@ export const defaultCategoryColors = {
   tires: "from-gray-500 to-slate-500",
   lighting: "from-indigo-500 to-blue-500",
   fluids: "from-orange-500 to-red-500",
+  transmission: "from-teal-500 to-cyan-500",
+  cooling: "from-blue-500 to-indigo-500",
+  fuel: "from-green-500 to-teal-500",
+  interior: "from-pink-500 to-rose-500",
+  tools: "from-gray-500 to-zinc-500",
+  performance: "from-red-500 to-pink-500",
+  maintenance: "from-emerald-500 to-green-500",
 };
