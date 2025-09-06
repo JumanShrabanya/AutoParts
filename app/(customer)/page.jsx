@@ -21,12 +21,12 @@ export default function HomePage() {
               Shop Now
               <ArrowRight className="h-5 w-5" />
             </Link>
-            {/* <Link
-              href="/categories"
+            <Link
+              href="/auth/register"
               className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
             >
-              Browse Categories
-            </Link> */}
+              Get Started
+            </Link>
           </div>
         </div>
       </section>
@@ -99,22 +99,22 @@ export default function HomePage() {
             {[
               {
                 name: "Engine Parts",
-                href: "/categories/engine",
+                href: "/parts?category=engine",
                 count: "2,500+",
               },
               {
                 name: "Brake System",
-                href: "/categories/brakes",
+                href: "/parts?category=brakes",
                 count: "1,800+",
               },
               {
                 name: "Suspension",
-                href: "/categories/suspension",
+                href: "/parts?category=suspension",
                 count: "1,200+",
               },
               {
                 name: "Electrical",
-                href: "/categories/electrical",
+                href: "/parts?category=electrical",
                 count: "3,100+",
               },
             ].map((category) => (
@@ -145,7 +145,7 @@ export default function HomePage() {
             quality automotive parts
           </p>
           <Link
-            href="/auth"
+            href="/auth/register"
             className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-flex items-center gap-2"
           >
             Get Started
