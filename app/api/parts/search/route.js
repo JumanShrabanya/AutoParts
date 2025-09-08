@@ -20,7 +20,10 @@ export async function GET(request) {
     const sortOrder = searchParams.get("sortOrder") || "asc";
 
     // Build search filter
-    const filter = { isActive: true };
+    // Treat documents without isActive as active to include older seeded data
+    const filter = {
+      $or: [{ isActive: true }, { isActive: { $exists: false } }],
+    };
 
     // Text search
     if (query.trim()) {
@@ -28,7 +31,8 @@ export async function GET(request) {
     }
 
     // Category filter
-    if (category) {
+    // If a text query is present, ignore category filter for now (name search only)
+    if (!query.trim() && category) {
       filter.category = category;
     }
 

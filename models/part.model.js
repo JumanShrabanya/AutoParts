@@ -52,6 +52,14 @@ const partSchema = new mongoose.Schema(
         yearTo: Number,
       },
     ],
+    specifications: [
+      {
+        label: { type: String, trim: true, required: true },
+        value: { type: String, trim: true, required: true },
+        _id: false,
+      },
+    ],
+    compatibility: [{ type: String, trim: true }], // e.g., "Toyota Camry (2016-2022)"
     rating: {
       type: Number,
       default: 0,

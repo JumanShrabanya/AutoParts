@@ -31,7 +31,7 @@ export default function PartsPage() {
   useEffect(() => {
     fetchCategories();
     fetchBrands();
-    
+
     // If there's a selected category, fetch its parts
     if (selectedCategory) {
       fetchPartsByCategory(selectedCategory);
@@ -52,7 +52,7 @@ export default function PartsPage() {
       setIsLoadingCategories(false);
     }
   };
-  
+
   const fetchPartsByCategory = async (categoryId) => {
     try {
       setIsSearching(true);
@@ -67,7 +67,7 @@ export default function PartsPage() {
       setIsSearching(false);
     }
   };
-  
+
   const fetchBrands = async () => {
     try {
       setIsLoadingBrands(true);
@@ -88,28 +88,28 @@ export default function PartsPage() {
       // Toggle category selection
       const newCategoryId = selectedCategory === categoryId ? "" : categoryId;
       setSelectedCategory(newCategoryId);
-      
+
       // Clear other filters
       setSearchQuery("");
       setBrand("");
       setPriceRange([0, 10000]);
-      
+
       // If no category is selected, clear results and return
       if (!newCategoryId) {
         setSearchResults([]);
         return;
       }
-      
+
       setIsSearching(true);
-      
+
       // Try fetching parts using category-specific endpoint
       const response = await fetch(`/api/categories/${newCategoryId}/parts`);
       const data = await response.json();
-      
+
       if (data.success && data.data) {
         const parts = Array.isArray(data.data) ? data.data : [];
         setSearchResults(parts);
-        
+
         // If no parts found, try the search endpoint as fallback
         if (parts.length === 0) {
           await fetchPartsBySearch(newCategoryId);
@@ -127,7 +127,7 @@ export default function PartsPage() {
       setIsSearching(false);
     }
   };
-  
+
   const fetchPartsBySearch = async (categoryId) => {
     try {
       const params = new URLSearchParams();
@@ -148,7 +148,7 @@ export default function PartsPage() {
       setSearchResults([]);
     }
   };
-  
+
   const scrollToResults = () => {
     setTimeout(() => {
       const resultsSection = document.getElementById("search-results");
@@ -168,8 +168,13 @@ export default function PartsPage() {
     try {
       // Build query parameters
       const params = new URLSearchParams();
-      if (searchQuery.trim()) params.append("q", searchQuery.trim());
-      if (selectedCategory) params.append("category", selectedCategory);
+      const hasTextQuery = Boolean(searchQuery.trim());
+      if (hasTextQuery) {
+        params.append("q", searchQuery.trim());
+        // Ignore category when a text query is provided
+      } else if (selectedCategory) {
+        params.append("category", selectedCategory);
+      }
       if (brand) params.append("brand", brand);
       if (priceRange[0] > 0) params.append("minPrice", priceRange[0]);
       if (priceRange[1] < 10000) params.append("maxPrice", priceRange[1]);
@@ -271,7 +276,10 @@ export default function PartsPage() {
               Clear Category
             </button>
           </div>
-        ) : searchQuery || brand || priceRange[0] > 0 || priceRange[1] < 10000 ? (
+        ) : searchQuery ||
+          brand ||
+          priceRange[0] > 0 ||
+          priceRange[1] < 10000 ? (
           <NoResults
             onReset={() => {
               setSearchQuery("");
