@@ -45,7 +45,7 @@ export default function SearchResults({
     <div id="search-results" className="mb-12">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">
-          Search Results ({searchResults.length})
+          Search Results ({searchResults && searchResults.length})
         </h2>
         <button
           onClick={clearSearch}
@@ -56,7 +56,7 @@ export default function SearchResults({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {searchResults.map((part) => (
+        {searchResults && searchResults.map((part) => (
           <div
             key={part._id}
             className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 group"

@@ -1,10 +1,6 @@
 import { defaultCategoryIcons, defaultCategoryColors } from "./data";
 
-export default function CategoryCards({
-  categories,
-  selectedCategory,
-  handleCategorySelect,
-}) {
+export default function CategoryCards({ categories, selectedCategory, onCategorySelect }) {
   const getCategoryIcon = (categoryName) => {
     // Try to find a matching icon from the category name
     const categoryKey = categoryName.toLowerCase().replace(/\s+/g, "");
@@ -58,38 +54,39 @@ export default function CategoryCards({
           Browse by Category
         </h2>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          Explore our comprehensive collection of automotive parts organized by
-          category
+          Select a category to explore our wide range of automotive parts
         </p>
       </div>
-
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {categories.map((category) => {
           const IconComponent = getCategoryIcon(category.name);
-          const colorClass = getCategoryColor(category.name);
+          const color = getCategoryColor(category.name);
 
+          const isSelected = selectedCategory === category._id;
+          
           return (
-            <div
+            <button
               key={category._id}
-              onClick={() => handleCategorySelect(category._id)}
-              className={`group cursor-pointer transform transition-all duration-300 hover:scale-105 ${
-                selectedCategory === category._id
-                  ? "ring-2 ring-blue-500 ring-offset-2"
-                  : ""
+              onClick={() => onCategorySelect(category._id)}
+              className={`group block w-full text-left ${
+                isSelected ? 'ring-2 ring-blue-500' : ''
               }`}
             >
-              <div
-                className={`bg-gradient-to-br ${colorClass} rounded-2xl p-6 text-white text-center shadow-lg hover:shadow-xl transition-all duration-300`}
-              >
-                <div className="bg-white/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 group-hover:bg-white/30 transition-all duration-300">
-                  <IconComponent className="w-8 h-8" />
+              <div className="h-full relative overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-10 group-hover:opacity-20 transition-opacity duration-300`} />
+                <div className="relative z-10">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm">
+                    <IconComponent className={`h-6 w-6 ${color.replace('bg-', 'text-')}`} />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {category.name}
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500 line-clamp-2">
+                    {category.description}
+                  </p>
                 </div>
-                <h3 className="font-semibold text-lg mb-2">{category.name}</h3>
-                <p className="text-white/80 text-sm">
-                  {category.description || "Auto parts"}
-                </p>
               </div>
-            </div>
+            </button>
           );
         })}
       </div>

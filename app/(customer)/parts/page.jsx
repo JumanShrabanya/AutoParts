@@ -27,11 +27,16 @@ export default function PartsPage() {
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isLoadingBrands, setIsLoadingBrands] = useState(true);
 
-  // Fetch categories and brands on component mount
+  // Fetch categories and brands on component mount and when category changes
   useEffect(() => {
     fetchCategories();
     fetchBrands();
-  }, []);
+    
+    // If there's a selected category, fetch its parts
+    if (selectedCategory) {
+      fetchPartsByCategory(selectedCategory);
+    }
+  }, [selectedCategory]);
 
   const fetchCategories = async () => {
     try {
@@ -47,7 +52,22 @@ export default function PartsPage() {
       setIsLoadingCategories(false);
     }
   };
-
+  
+  const fetchPartsByCategory = async (categoryId) => {
+    try {
+      setIsSearching(true);
+      const response = await fetch(`/api/categories/${categoryId}/parts`);
+      const data = await response.json();
+      if (data.data) {
+        setSearchResults(data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch parts by category:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  
   const fetchBrands = async () => {
     try {
       setIsLoadingBrands(true);
@@ -63,6 +83,84 @@ export default function PartsPage() {
     }
   };
 
+  const handleCategorySelect = async (categoryId) => {
+    try {
+      // Toggle category selection
+      const newCategoryId = selectedCategory === categoryId ? "" : categoryId;
+      setSelectedCategory(newCategoryId);
+      
+      // Clear other filters
+      setSearchQuery("");
+      setBrand("");
+      setPriceRange([0, 10000]);
+      
+      // If no category is selected, clear results and return
+      if (!newCategoryId) {
+        setSearchResults([]);
+        return;
+      }
+      
+      setIsSearching(true);
+      
+      // Try fetching parts using category-specific endpoint
+      const response = await fetch(`/api/categories/${newCategoryId}/parts`);
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        const parts = Array.isArray(data.data) ? data.data : [];
+        setSearchResults(parts);
+        
+        // If no parts found, try the search endpoint as fallback
+        if (parts.length === 0) {
+          await fetchPartsBySearch(newCategoryId);
+        } else {
+          scrollToResults();
+        }
+      } else {
+        // Fallback to search endpoint
+        await fetchPartsBySearch(newCategoryId);
+      }
+    } catch (error) {
+      console.error("Error in handleCategorySelect:", error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  
+  const fetchPartsBySearch = async (categoryId) => {
+    try {
+      const params = new URLSearchParams();
+      params.append("category", categoryId);
+      params.append("limit", "50");
+
+      const response = await fetch(`/api/parts/search?${params.toString()}`);
+      const data = await response.json();
+
+      if (data.success && data.data?.parts) {
+        setSearchResults(data.data.parts);
+        scrollToResults();
+      } else {
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error("Error in fetchPartsBySearch:", error);
+      setSearchResults([]);
+    }
+  };
+  
+  const scrollToResults = () => {
+    setTimeout(() => {
+      const resultsSection = document.getElementById("search-results");
+      if (resultsSection) {
+        resultsSection.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 100);
+  };
+
   const handleSearch = async (e) => {
     e.preventDefault();
     setIsSearching(true);
@@ -75,25 +173,15 @@ export default function PartsPage() {
       if (brand) params.append("brand", brand);
       if (priceRange[0] > 0) params.append("minPrice", priceRange[0]);
       if (priceRange[1] < 10000) params.append("maxPrice", priceRange[1]);
-      params.append("limit", "50"); // Show more results
+      params.append("limit", "50");
 
       const response = await fetch(`/api/parts/search?${params.toString()}`);
       const data = await response.json();
 
       if (data.success) {
         setSearchResults(data.data.parts);
-
-        // Scroll to results section after search
         if (data.data.parts.length > 0) {
-          setTimeout(() => {
-            const resultsSection = document.getElementById("search-results");
-            if (resultsSection) {
-              resultsSection.scrollIntoView({
-                behavior: "smooth",
-                block: "start",
-              });
-            }
-          }, 100);
+          scrollToResults();
         }
       } else {
         console.error("Search failed:", data.error);
@@ -104,51 +192,6 @@ export default function PartsPage() {
       setSearchResults([]);
     } finally {
       setIsSearching(false);
-    }
-  };
-
-  const handleCategorySelect = async (categoryId) => {
-    const newCategory = categoryId === selectedCategory ? "" : categoryId;
-    setSelectedCategory(newCategory);
-
-    // Auto-search when category is selected
-    if (newCategory) {
-      setSearchQuery("");
-      setBrand("");
-      setPriceRange([0, 10000]);
-
-      try {
-        setIsSearching(true);
-        const params = new URLSearchParams();
-        params.append("category", newCategory);
-        params.append("limit", "50");
-
-        const response = await fetch(`/api/parts/search?${params.toString()}`);
-        const data = await response.json();
-
-        if (data.success) {
-          setSearchResults(data.data.parts);
-
-          // Scroll to results section after category selection
-          if (data.data.parts.length > 0) {
-            setTimeout(() => {
-              const resultsSection = document.getElementById("search-results");
-              if (resultsSection) {
-                resultsSection.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                });
-              }
-            }, 100);
-          }
-        }
-      } catch (error) {
-        console.error("Category search error:", error);
-      } finally {
-        setIsSearching(false);
-      }
-    } else {
-      setSearchResults([]);
     }
   };
 
@@ -207,29 +250,42 @@ export default function PartsPage() {
         <CategoryCards
           categories={categories}
           selectedCategory={selectedCategory}
-          handleCategorySelect={handleCategorySelect}
+          onCategorySelect={handleCategorySelect}
         />
 
         {/* Search Results Section */}
-        {searchResults.length > 0 && (
-          <SearchResults
-            searchResults={searchResults}
-            categories={categories}
-            clearSearch={clearSearch}
-            isLoading={isSearching}
+        {searchResults.length > 0 ? (
+          <SearchResults searchResults={searchResults} />
+        ) : isSearching ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+            <p className="mt-2 text-gray-600">Loading parts...</p>
+          </div>
+        ) : selectedCategory ? (
+          <div className="text-center py-12">
+            <p className="text-gray-600">No parts found in this category.</p>
+            <button
+              onClick={() => setSelectedCategory("")}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            >
+              Clear Category
+            </button>
+          </div>
+        ) : searchQuery || brand || priceRange[0] > 0 || priceRange[1] < 10000 ? (
+          <NoResults
+            onReset={() => {
+              setSearchQuery("");
+              setSelectedCategory("");
+              setBrand("");
+              setPriceRange([0, 10000]);
+            }}
           />
+        ) : (
+          <StartSearch />
         )}
 
-        {/* No Results Message */}
-        {searchResults.length === 0 &&
-          (searchQuery ||
-            selectedCategory ||
-            brand ||
-            priceRange[0] > 0 ||
-            priceRange[1] < 10000) && <NoResults clearSearch={clearSearch} />}
-
-        {/* Start Your Search Section (when no search has been performed) */}
-        {searchResults.length === 0 &&
+        {/* Start Your Search Section */}
+        {/* {searchResults.length === 0 &&
           !searchQuery &&
           !selectedCategory &&
           !brand &&
@@ -239,7 +295,7 @@ export default function PartsPage() {
               setShowAdvancedSearch={setShowAdvancedSearch}
               handleBrowseAll={handleBrowseAll}
             />
-          )}
+          )} */}
       </div>
     </div>
   );
