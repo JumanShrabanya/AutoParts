@@ -128,7 +128,34 @@ export default function AuthPage() {
     e.preventDefault();
 
     if (!isSignUp) {
-      // TODO: Implement sign in flow (axios)
+      const emailErr = validateEmail(formData.email);
+      const passwordErr = formData.password ? "" : "Password is required";
+      setErrors((prev) => ({
+        ...prev,
+        email: emailErr,
+        password: passwordErr,
+      }));
+      setTouched((prev) => ({ ...prev, email: true, password: true }));
+      if (emailErr || passwordErr) return;
+
+      setApiError("");
+      setIsSubmitting(true);
+      try {
+        const { data } = await axios.post("/api/auth/login", {
+          email: formData.email,
+          password: formData.password,
+        });
+        if (!data?.success) {
+          setApiError(data?.message || "Invalid credentials");
+          return;
+        }
+        router.replace("/");
+      } catch (err) {
+        const resp = err?.response?.data;
+        setApiError(resp?.message || "Login failed. Please try again.");
+      } finally {
+        setIsSubmitting(false);
+      }
       return;
     }
 
