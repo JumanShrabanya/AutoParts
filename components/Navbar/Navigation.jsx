@@ -87,7 +87,11 @@ export default function Navigation() {
           {/* Right side actions */}
           <div className="flex items-center space-x-4">
             <Link
-              href="/cart"
+              href={
+                authenticated && user?.id
+                  ? `/${user.id}/cart`
+                  : "/auth/register"
+              }
               className="text-gray-700 hover:text-blue-600 p-2 transition-colors"
             >
               <ShoppingCart className="h-6 w-6" />

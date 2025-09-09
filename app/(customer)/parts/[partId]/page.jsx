@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Star, ShoppingCart, CreditCard } from "lucide-react";
 
 export default function PartDetailsPage({ params }) {
   const { partId } = params || {};
+  const router = useRouter();
 
   // Start empty; fetch actual product on mount
   const [product, setProduct] = useState(null);
@@ -71,6 +73,8 @@ export default function PartDetailsPage({ params }) {
 
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [adding, setAdding] = useState(false);
+  const [addMessage, setAddMessage] = useState("");
 
   const increaseQty = () =>
     setQuantity((q) => Math.min(q + 1, Math.max(product.stockQuantity, 1)));
@@ -80,6 +84,25 @@ export default function PartDetailsPage({ params }) {
     () => `$${Number((product && product.price) || 0).toFixed(2)}`,
     [product?.price]
   );
+
+  const handleAddToCart = async () => {
+    if (!partId) return;
+    try {
+      setAdding(true);
+      setAddMessage("");
+      await axios.post("/api/cart/items", { partId, quantity });
+      setAddMessage("Added to cart");
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        router.push("/auth/register");
+        return;
+      }
+      setAddMessage("Failed to add to cart");
+    } finally {
+      setAdding(false);
+      setTimeout(() => setAddMessage(""), 2500);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -273,10 +296,12 @@ export default function PartDetailsPage({ params }) {
                   {/* Actions */}
                   <button
                     type="button"
-                    className="cursor-pointer inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none sm:w-auto"
+                    onClick={handleAddToCart}
+                    disabled={adding}
+                    className="cursor-pointer inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none disabled:opacity-50 sm:w-auto"
                   >
                     <ShoppingCart className="h-4 w-4" />
-                    Add to Cart
+                    {adding ? "Adding..." : "Add to Cart"}
                   </button>
                   <button
                     type="button"
@@ -286,6 +311,9 @@ export default function PartDetailsPage({ params }) {
                     Buy Now
                   </button>
                 </div>
+                {addMessage && (
+                  <div className="mt-2 text-sm text-gray-700">{addMessage}</div>
+                )}
               </div>
             </div>
           </div>
