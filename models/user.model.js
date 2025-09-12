@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema({
   //   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
 
   // Seller-specific fields (optional)
+  sellerId: { type: mongoose.Schema.Types.ObjectId, ref: "Seller" },
   storeName: { type: String },
 
   createdAt: { type: Date, default: Date.now },

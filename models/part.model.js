@@ -22,6 +22,11 @@ const partSchema = new mongoose.Schema(
       ref: "Brand",
       required: true,
     },
+    seller: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Seller",
+      required: true,
+    },
     price: {
       type: Number,
       required: true,
@@ -84,6 +89,7 @@ const partSchema = new mongoose.Schema(
 partSchema.index({ name: "text", description: "text" });
 partSchema.index({ category: 1 });
 partSchema.index({ brand: 1 });
+partSchema.index({ seller: 1 });
 partSchema.index({ price: 1 });
 partSchema.index({ rating: -1 });
 

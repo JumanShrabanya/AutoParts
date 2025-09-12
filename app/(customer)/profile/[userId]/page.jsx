@@ -21,6 +21,8 @@ export default function ProfilePage() {
   const params = useParams();
   const router = useRouter();
 
+  const role = user?.role;
+
   const routeUserId = useMemo(
     () => (Array.isArray(params?.userId) ? params.userId[0] : params?.userId),
     [params]
@@ -107,6 +109,25 @@ export default function ProfilePage() {
                   <LogOut className="w-4 h-4" />
                   Log out
                 </button>
+                {user?.role === "seller" ? (
+                  <button
+                    onClick={() =>
+                      router.push(`/seller/${user.sellerId}/dashboard`)
+                    }
+                    className="cursor-pointer px-6 py-3 text-sm font-medium rounded-xl bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
+                  >
+                    Seller Dashboard
+                  </button>
+                ) : (
+                  <button
+                    onClick={() =>
+                      router.push(`/profile/${user.id}/seller-details`)
+                    }
+                    className="cursor-pointer px-6 py-3 text-sm font-medium rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
+                  >
+                    Become a seller
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -131,7 +152,7 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
                   <span className="text-gray-600 font-medium">Role</span>
                   <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium capitalize">
-                    {user.role || "customer"}
+                    {role}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
