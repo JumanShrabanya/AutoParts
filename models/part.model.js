@@ -38,25 +38,14 @@ const partSchema = new mongoose.Schema(
       min: 0,
       default: 0,
     },
+    // Array of image URLs
     images: [
       {
         type: String,
         required: true,
       },
     ],
-    specifications: {
-      type: Map,
-      of: String,
-      default: {},
-    },
-    compatibility: [
-      {
-        make: String,
-        model: String,
-        yearFrom: Number,
-        yearTo: Number,
-      },
-    ],
+    // Key-value pairs for part specifications
     specifications: [
       {
         label: { type: String, trim: true, required: true },
@@ -64,7 +53,8 @@ const partSchema = new mongoose.Schema(
         _id: false,
       },
     ],
-    compatibility: [{ type: String, trim: true }], // e.g., "Toyota Camry (2016-2022)"
+    // Simple array of compatibility strings
+    compatibility: [{ type: String, trim: true }],
     rating: {
       type: Number,
       default: 0,
