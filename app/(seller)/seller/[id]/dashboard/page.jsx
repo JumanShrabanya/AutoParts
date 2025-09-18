@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useUserSession } from "@/context/userSession";
 import { useSellerProfile } from "@/hooks/useSellerProfile";
@@ -32,6 +32,37 @@ export default function SellerDashboardPage() {
     () => (Array.isArray(params?.id) ? params.id[0] : params?.id),
     [params]
   );
+
+  // State for listed products
+  const [sellerParts, setSellerParts] = useState([]);
+  const [partsLoading, setPartsLoading] = useState(true);
+  const [partsError, setPartsError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    async function loadParts() {
+      if (!sellerId) return;
+      try {
+        setPartsError("");
+        setPartsLoading(true);
+        const res = await fetch(`/api/seller/${sellerId}/parts`, {
+          method: 'GET',
+          credentials: 'include'
+        });
+        const json = await res.json();
+        if (!res.ok || !json?.success) throw new Error(json?.error || 'Failed to fetch');
+        if (active) setSellerParts(Array.isArray(json.data) ? json.data : []);
+      } catch (e) {
+        if (active) setPartsError(e?.message || 'Failed to load products');
+      } finally {
+        if (active) setPartsLoading(false);
+      }
+    }
+    loadParts();
+    return () => {
+      active = false;
+    };
+  }, [sellerId]);
 
   // Check if user is authenticated and has access to this seller dashboard
   if (loading || sessionLoading) {
@@ -161,10 +192,48 @@ export default function SellerDashboardPage() {
             padding: 16,
           }}
         >
-          <div style={{ fontWeight: 600, marginBottom: 12 }}>Recent Orders</div>
-          <div style={{ color: "#6b7280", fontSize: 14 }}>
-            No recent orders yet.
-          </div>
+          <div style={{ fontWeight: 600, marginBottom: 12 }}>Listed Products</div>
+          {partsLoading ? (
+            <div style={{ color: "#6b7280", fontSize: 14 }}>Loading products...</div>
+          ) : partsError ? (
+            <div style={{ color: "#ef4444", fontSize: 14 }}>{partsError}</div>
+          ) : sellerParts.length === 0 ? (
+            <div style={{ color: "#6b7280", fontSize: 14 }}>No products listed yet.</div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="text-left border-b">
+                    <th className="py-2 pr-4">Product</th>
+                    <th className="py-2 pr-4">Brand</th>
+                    <th className="py-2 pr-4">Category</th>
+                    <th className="py-2 pr-4">Price</th>
+                    <th className="py-2 pr-4">Stock</th>
+                    <th className="py-2 pr-4">Listed On</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sellerParts.map((p) => (
+                    <tr key={p._id} className="border-b last:border-0">
+                      <td className="py-2 pr-4 flex items-center gap-3">
+                        {p.image ? (
+                          <img src={p.image} alt={p.name} className="w-10 h-10 object-cover rounded" />
+                        ) : (
+                          <div className="w-10 h-10 bg-gray-100 rounded" />
+                        )}
+                        <span className="font-medium text-gray-900">{p.name}</span>
+                      </td>
+                      <td className="py-2 pr-4 text-gray-700">{p.brand || '-'}</td>
+                      <td className="py-2 pr-4 text-gray-700">{p.category || '-'}</td>
+                      <td className="py-2 pr-4 font-medium text-gray-900">{`$${Number(p.price).toFixed(2)}`}</td>
+                      <td className="py-2 pr-4">{p.stockQuantity}</td>
+                      <td className="py-2 pr-4 text-gray-700">{new Date(p.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
         <div
           style={{

@@ -40,23 +40,14 @@ export default function PartDetailsPage({ params }) {
                 : ["/vercel.svg"],
             description: p.description || "",
             specifications: Array.isArray(p.specifications)
-              ? p.specifications
-              : Object.entries(p.specifications || {}).map(
-                  ([label, value]) => ({ label, value })
-                ),
-            compatibility: Array.isArray(p.compatibility)
-              ? typeof p.compatibility[0] === "string"
-                ? p.compatibility
-                : p.compatibility
-                    .map((c) =>
-                      c?.make && c?.model
-                        ? `${c.make} ${c.model} (${c.yearFrom ?? "?"}-${
-                            c.yearTo ?? "?"
-                          })`
-                        : ""
-                    )
-                    .filter(Boolean)
+              ? p.specifications.filter(s => s?.label && s?.value)
               : [],
+            compatibility: Array.isArray(p.compatibility) 
+              ? p.compatibility
+              : p.specifications?.find(s => s?.label?.toLowerCase() === 'compatibility')?.value
+                  ?.split(',')
+                  .map(s => s.trim())
+                  .filter(Boolean) || [],
           });
         }
       } catch (_e) {
@@ -219,38 +210,45 @@ export default function PartDetailsPage({ params }) {
                   {product.description}
                 </p>
 
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="rounded-lg border border-gray-200 p-3">
-                    <h3 className="mb-2 text-sm font-medium text-gray-900">
-                      Specifications
-                    </h3>
-                    <dl className="space-y-1">
-                      {product.specifications.map((s) => (
-                        <div
-                          key={s.label}
-                          className="flex items-center justify-between text-sm"
-                        >
-                          <dt className="text-gray-600">{s.label}</dt>
-                          <dd className="font-medium text-gray-900">
-                            {s.value}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
-                  </div>
+                <div className="mt-4">
+                  {product.specifications.length > 0 && (
+                    <div className="rounded-lg border border-gray-200 p-3 mb-4">
+                      <h3 className="mb-2 text-sm font-medium text-gray-900">
+                        Specifications
+                      </h3>
+                      <dl className="space-y-1">
+                        {product.specifications
+                          .filter(s => s.label.toLowerCase() !== 'compatibility')
+                          .map((s) => (
+                            <div
+                              key={s.label}
+                              className="flex items-start justify-between text-sm py-1 border-b border-gray-100 last:border-0"
+                            >
+                              <dt className="text-gray-600 pr-2">{s.label}:</dt>
+                              <dd className="font-medium text-gray-900 text-right">
+                                {s.value}
+                              </dd>
+                            </div>
+                          ))}
+                      </dl>
+                    </div>
+                  )}
 
-                  <div className="rounded-lg border border-gray-200 p-3">
-                    <h3 className="mb-2 text-sm font-medium text-gray-900">
-                      Compatibility
-                    </h3>
-                    <ul className="space-y-1 text-sm text-gray-700">
-                      {product.compatibility.map((c) => (
-                        <li key={c} className="list-disc pl-4">
-                          {c}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  {product.compatibility.length > 0 && (
+                    <div className="rounded-lg border border-gray-200 p-3">
+                      <h3 className="mb-2 text-sm font-medium text-gray-900">
+                        Compatibility
+                      </h3>
+                      <ul className="space-y-1 text-sm text-gray-700">
+                        {product.compatibility.map((c, index) => (
+                          <li key={index} className="list-disc pl-4">
+                            {c}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
                 </div>
 
                 <div className="mt-5 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
@@ -316,7 +314,6 @@ export default function PartDetailsPage({ params }) {
                 )}
               </div>
             </div>
-          </div>
         )}
       </div>
     </div>
